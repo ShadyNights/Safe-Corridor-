@@ -1,0 +1,6 @@
+com.safecorridor.tracker.test.app-annotation-experimental-1.3.0-0 C:\Users\Kashifansari\.gradle\caches\9.0-milestone-1\transforms\16ddb01f23445c8fec78879754673e63\transformed\annotation-experimental-1.3.0\res
+com.safecorridor.tracker.test.app-core-1.5.0-1 C:\Users\Kashifansari\.gradle\caches\9.0-milestone-1\transforms\805ef5aff931d49a279ef0dc715f70ce\transformed\core-1.5.0\res
+com.safecorridor.tracker.test.app-androidTest-2 D:\Hacknagpur\android-app\SafeCorridorTracker\app\build\generated\res\resValues\androidTest\debug
+com.safecorridor.tracker.test.app-mergeDebugAndroidTestResources-3 D:\Hacknagpur\android-app\SafeCorridorTracker\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.safecorridor.tracker.test.app-mergeDebugAndroidTestResources-4 D:\Hacknagpur\android-app\SafeCorridorTracker\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.safecorridor.tracker.test.app-merged_res-5 D:\Hacknagpur\android-app\SafeCorridorTracker\app\build\intermediates\merged_res\debugAndroidTest

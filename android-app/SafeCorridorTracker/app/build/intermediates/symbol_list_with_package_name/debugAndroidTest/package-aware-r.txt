@@ -1,0 +1,3 @@
+com.safecorridor.tracker.test
+style WhiteBackgroundDialogTheme
+style WhiteBackgroundTheme
