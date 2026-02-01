@@ -25,33 +25,26 @@ class TelemetryRequest(BaseModel):
     speed: float
     deviation: Optional[float] = 0.0
     accuracy: Optional[float] = 0.0
-    timestamp: Optional[int] = None # Unix millis
+    timestamp: Optional[int] = None
 
 app = FastAPI()
 
 database.init_db()
 
-# Global Sessions Store
 sessions: Dict[str, RideSession] = {}
 
 def cleanup_stale_sessions():
-    """
-    Production Requirement: Auto-close sessions that hang open (e.g. App crash/Battery die).
-    Rule: If no telemetry for >2 hours, mark ABANDONED.
-    """
-    cutoff = datetime.now().timestamp() - 7200 # 2 hours
+    cutoff = datetime.now().timestamp() - 7200
     active_sids = list(sessions.keys())
     count = 0
     
     for sid in active_sids:
         session = sessions[sid]
-        # In memory check
-        # Assuming session has last_timestamp (otherwise use start_time)
         last_ts = getattr(session, 'last_timestamp', 0) / 1000.0
         if last_ts == 0: last_ts = session.start_time.timestamp()
         
         if last_ts < cutoff:
-            print(f"CLEANUP: Closing stale session {sid} (Inactive >2hr)")
+            print(f"CLEANUP: Closing stale session {sid}")
             session.status = "ABANDONED"
             database.update_ride_status(sid, "ABANDONED")
             del sessions[sid]
@@ -61,7 +54,6 @@ def cleanup_stale_sessions():
         print(f"Cleanup: Removed {count} stale sessions.")
 
 def load_active_rides():
-    # Run cleanup before loading
     cleanup_stale_sessions()
     
     active_rows = database.get_active_rides()
@@ -71,13 +63,7 @@ def load_active_rides():
         start_loc = Location(lat=row['start_lat'], lon=row['start_lon'])
         end_loc = Location(lat=row['end_lat'], lon=row['end_lon'])
         
-        # Pure in-memory rehydration (no DB write triggered)
         session = RideSession(s_id, start_loc, end_loc)
-        
-        # Restore state from DB if available (Basic rehydration)
-        # In a full system, we would parse 'final_state' and 'risk_score' columns if they existed
-        # For this MVP, we just accept the ride exists.
-        
         sessions[s_id] = session
         count += 1
     print(f"Global State Recovery: Rehydrated {count} active rides.")
@@ -95,42 +81,42 @@ app.add_middleware(
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 socket_app = socketio.ASGIApp(sio, app)
 
-
-
 @app.get("/")
 def read_root():
-    return {"message": "SafeCorridor Backend (Python/FastAPI) Running"}
+    return {"message": "SafeCorridor Backend Running"}
 
 @app.post("/api/ride/start")
 async def start_ride(req: StartRideRequest):
     session_id = str(int(datetime.now().timestamp() * 1000))
-    
-    # Correctly create DB entry first (once)
     database.create_ride(session_id, req.startLocation.dict(), req.endLocation.dict())
-    
-    # Then create in-memory object
     new_session = RideSession(session_id, req.startLocation, req.endLocation)
     sessions[session_id] = new_session
-    
     print(f"Ride started: {session_id}")
     await sio.emit('ride_started', {
         "sessionId": session_id,
         "startLocation": req.startLocation.dict(),
         "endLocation": req.endLocation.dict()
     })
-    
     return {"sessionId": session_id, "status": "STARTED"}
 
 @app.post("/api/ride/telemetry")
 async def ride_telemetry(req: TelemetryRequest):
     session = sessions.get(req.sessionId)
     if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
+        print(f"Auto-creating session for {req.sessionId}")
+        start_loc = req.location
+        end_loc = req.location
+        database.create_ride(req.sessionId, start_loc.dict(), end_loc.dict())
+        session = RideSession(req.sessionId, start_loc, end_loc)
+        sessions[req.sessionId] = session
+        await sio.emit('ride_started', {
+            "sessionId": req.sessionId,
+            "startLocation": start_loc.dict(),
+            "endLocation": end_loc.dict()
+        })
 
     result = session.update_telemetry(req)
-    
     result['location'] = req.location.dict()
-    
     await sio.emit('ride_update', result)
     return result
 
@@ -139,6 +125,7 @@ async def end_ride(req: EndRideRequest):
     session = sessions.get(req.sessionId)
     if session:
         print(f"Ride ended: {req.sessionId}")
+        session.end_ride()
         await sio.emit('ride_ended', {"sessionId": req.sessionId})
         del sessions[req.sessionId]
     return {"status": "ENDED"}

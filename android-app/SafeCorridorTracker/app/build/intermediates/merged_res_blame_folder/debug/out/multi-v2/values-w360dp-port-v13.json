@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.safecorridor.tracker.app-mergeDebugResources-35:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
+            "outputFile": "com.safecorridor.tracker.app-mergeDebugResources-36:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Kashifansari\\.gradle\\caches\\9.0-milestone-1\\transforms\\9cb7ea1b3cc15c2a0b8c114e23b0897c\\transformed\\material-1.11.0\\res\\values-w360dp-port-v13\\values-w360dp-port-v13.xml",
+                    "source": "C:\\Users\\Kashifansari\\.gradle\\caches\\transforms-3\\18aa572075c3eb4ad7bff20e2bb15bf2\\transformed\\material-1.11.0\\res\\values-w360dp-port-v13\\values-w360dp-port-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",

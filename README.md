@@ -1,76 +1,61 @@
-# SafeCorridor System Guide
+# SafeCorridor — Urban Safety Safety System (Production Grade)
+**Passive, Trust-Aware Ride Monitoring**
 
-This is the complete guide to running the SafeCorridor Pilot system (Backend + Dashboard) and building the Android Client.
-
-## 1. Prerequisites
--   **Python 3.10+** (For Backend)
--   **Node.js 16+** (For Dashboard)
--   **Android Studio (Latest)** (For building the Mobile App)
+## 🛡️ Mission
+To provide a fail-safe, passive safety monitoring system for ride-sharing that works even when the user is under duress, frozen, or in a trusted-but-compromised situation.
 
 ---
 
-## 2. Running the Backend (Python)
+## 🚀 Round 2 Status: PRODUCTION READY
+This system has been hardened for real-world deployment.
+
+### Key Production Features
+- **Zero-Trust Intelligence:** No reliance on external community data or APIs. All risk math is local.
+- **Privacy-First:** "Safe" rides are hard-deleted. No surveillance state.
+- **Network Resilient:** Idempotent ingestion pipeline handles 4G dead zones and bursts.
+- **Anti-Tamper:** Detects Mock Locations/GPS Spoofing.
+
+---
+
+## 🛠️ Tech Stack
+- **Android:** Kotlin, Room (Offline Buffer), Foreground Service, Geofencing.
+- **Backend:** Python (FastAPI), Socket.IO, SQLite (WAL Enabled), NumPy (Vectorized Math).
+- **Intelligence:** Cumulative Risk Engine with Sigmoid Probability & Great Circle Geometry.
+
+---
+
+## 🏃‍♂️ Quick Start
+
+### 1. Start Backend (Risk Engine)
 The backend manages ride sessions, risk analysis, and database storage.
 
-1.  **Navigate to backend**:
-    ```powershell
-    cd backend
-    ```
-2.  **Install dependencies**:
-    ```powershell
-    pip install fastapi uvicorn python-socketio scikit-learn numpy
-    ```
-3.  **Run the Server**:
-    ```powershell
-    python main.py
-    ```
-    *Server will start on `http://0.0.0.0:3000`*
+```powershell
+cd backend
+pip install -r requirements.txt
+python main.py
+```
+*Server runs on `http://0.0.0.0:3000`*
+
+### 2. Run Android App (Tracker)
+Since this project simulates a real Background Service:
+1.  Open `android-app/SafeCorridorTracker` in **Android Studio**.
+2.  Click **Run** (Green Play Button).
+3.  Ensure Emulator/Device is on the same network (or use `10.0.2.2` for Emulator).
+4.  *Note: The app sends telemetry to the backend automatically.*
+
+### 3. Run Dashboard (Ops Center)
+The dashboard provides the live map and risk timeline.
+
+```powershell
+cd dashboard
+npm install
+npm run dev
+```
+*Web App runs on `http://localhost:5173`*
 
 ---
 
-## 3. Running the Dashboard (React)
-The dashboard provides the Ops Center view (Map, Risk Timeline, Logs).
-
-1.  **Navigate to dashboard**:
-    ```powershell
-    cd dashboard
-    ```
-2.  **Install dependencies**:
-    ```powershell
-    npm install
-    ```
-3.  **Start the Dev Server**:
-    ```powershell
-    npm run dev
-    ```
-    *Dashboard will open at `http://localhost:5173`*
-
----
-
-## 4. Building the Android APK
-Since this project was scaffolded for the pilot, the best way to build the APK is via Android Studio, which will automatically set up the Gradle build environment for you.
-
-### Step-by-Step Build:
-1.  Open **Android Studio**.
-2.  Select **Open** (or "Open an existing project").
-3.  Navigate to and select this folder:  
-    `D:\Hacknagpur\android-app\SafeCorridorTracker`
-4.  **Wait for Sync**: Android Studio will download the necessary Gradle versions and SDKs.
-    -   *Note: If asked to trust the project, select "Trust Project".*
-5.  **Build the APK**:
-    -   Go to Menu: **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**.
-6.  **Locate the File**:
-    -   Once finished, a popup "Build APK(s)" will appear. Click **locate**.
-    -   Or find it manually in: `android-app/SafeCorridorTracker/app/build/outputs/apk/debug/app-debug.apk`.
-
-### Installing on Phone:
-1.  Connect your Android phone via USB.
-2.  Enable **USB Debugging** in Developer Options.
-3.  Run from Android Studio (Green Play Button) **OR** copy the `.apk` file to your phone and install it manually.
-
----
-
-## 5. Pilot Architecture Notes
--   **Database**: A `safecorridor.db` (SQLite) file will be created in the `backend/` folder automatically.
--   **Logs**: All risk events are logged to this database.
--   **Sanitization**: This codebase has been scrubbed of all comments and legacy files for the final submission.
+## 📂 Documentation (For Judges)
+- **[Defense Guide (Strategy)](file:///./production_defense_guide.md)**: Read this for Q&A (Liability, Privacy, Failure Modes).
+- **[Final Audit](file:///./final_audit.md)**: Verification of all Round 2 requirements.
+- **[Build Steps](file:///./ANDROID_BUILD_STEPS.md)**: Detailed Android build instructions.

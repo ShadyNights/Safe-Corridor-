@@ -2,13 +2,12 @@ package com.safecorridor.tracker
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
+import android.content.pm.ServiceInfo
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
 import com.safecorridor.tracker.db.AppDatabase
@@ -43,12 +42,21 @@ class TrackerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Safe Corridor Active")
-            .setContentText("Monitoring ride safety silently...")
+            .setContentTitle("SafeCorridor")
+            .setContentText("Ride monitoring active")
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
             
-        startForeground(NOTIF_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+            } else {
+                startForeground(NOTIF_ID, notification)
+            }
+        } catch (e: Exception) {
+            stopSelf()
+        }
         
         startTracking()
         return START_STICKY
@@ -82,11 +90,10 @@ class TrackerService : Service() {
                 lat = location.latitude,
                 lng = location.longitude,
                 speed = location.speed,
-                isMock = location.isFromMockProvider
+                isMock = if (Build.VERSION.SDK_INT >= 31) location.isFromMockProvider else false
             )
 
             if (isNetworkAvailable()) {
-                // Pass accuracy from location object
                 if (sendTelemetry(point, location.accuracy)) {
                      flushBuffer() 
                 } else {
@@ -106,7 +113,7 @@ class TrackerService : Service() {
             put("deviation", 0)
             put("accuracy", accuracy)
             put("timestamp", point.timestamp)
-            put("isMock", if (android.os.Build.VERSION.SDK_INT >= 31) point.isMock else false)
+            put("isMock", point.isMock)
         }
 
         val request = Request.Builder()
@@ -116,8 +123,26 @@ class TrackerService : Service() {
             .build()
 
         return try {
-            val response = client.newCall(request).execute()
-            response.isSuccessful
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val json = JSONObject(responseBody)
+                        if (json.has("current_risk")) {
+                             val riskScore = json.getDouble("current_risk")
+                             val status = json.optString("severity", "NORMAL")
+                             
+                             val intent = Intent("com.safecorridor.tracker.RISK_UPDATE")
+                             intent.putExtra("risk_score", riskScore)
+                             intent.putExtra("status", status)
+                             androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                        }
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
         } catch (e: Exception) {
             false
         }

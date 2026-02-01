@@ -98,5 +98,4 @@ def delete_ride_data(session_id):
     c.execute("DELETE FROM rides WHERE ride_session_id = ?", (session_id,))
     conn.commit()
     conn.close()
-    print(f"PRIVACY AUDIT: Hard deleted session {session_id} (Ride Safe)")
-    print(f"PRIVACY: Deleted Normal Ride Data for {session_id}")
+    print(f"PRIVACY AUDIT: Hard deleted session {session_id}")

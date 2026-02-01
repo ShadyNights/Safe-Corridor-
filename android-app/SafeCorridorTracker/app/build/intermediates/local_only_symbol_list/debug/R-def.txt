@@ -1,2 +1,21 @@
 R_DEF: Internal format may change without notice
 local
+color md_theme_background
+color md_theme_onBackground
+color md_theme_onPrimary
+color md_theme_onSecondary
+color md_theme_onSurface
+color md_theme_onTertiary
+color md_theme_outline
+color md_theme_primary
+color md_theme_secondary
+color md_theme_surface
+color md_theme_tertiary
+id actionButton
+id statusText
+id titleText
+layout activity_main
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+style Theme.SafeCorridorTracker

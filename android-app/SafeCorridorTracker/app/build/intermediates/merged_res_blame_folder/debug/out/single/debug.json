@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.safecorridor.tracker.app-merged_res-38:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.safecorridor.tracker.app-main-40:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.safecorridor.tracker.app-merged_res-38:/layout_activity_main.xml.flat",
+        "source": "com.safecorridor.tracker.app-main-40:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.safecorridor.tracker.app-merged_res-38:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.safecorridor.tracker.app-main-40:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    }
+]

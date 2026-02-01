@@ -17,20 +17,23 @@ class RideSession:
         self.current_risk = 0
         self.severity = "NORMAL"
 
-        self.severity = "NORMAL"
-
     def update_telemetry(self, data):
-        # 0. Idempotency Check (Production Requirement)
         current_ts = getattr(data, 'timestamp', None) or int(datetime.now().timestamp() * 1000)
         
-        # If we have seen this timestamp (or newer), ignore this packet (Duplicate/Replay)
         if hasattr(self, 'last_timestamp') and current_ts <= self.last_timestamp:
-            print(f"WARN: Dropped duplicate/late packet {current_ts} (Last: {self.last_timestamp})")
-            return None # Ignore
+            print(f"WARN: Dropped duplicate packet {current_ts}")
+            return {
+                "sessionId": self.id,
+                "location": self.last_location,
+                "riskScore": self.current_risk,
+                "riskProbability": 0.0,
+                "severity": self.severity,
+                "reasons": [],
+                "speed": 0.0
+            }
             
         self.last_timestamp = current_ts
 
-        # 1. Update Basic Telemetry State
         if data.speed < 2.0:
             self.consecutive_stops += 1
         else:
@@ -39,7 +42,6 @@ class RideSession:
         self.path.append(data.location)
         self.last_location = data.location
 
-        # 2. Initialize Risk State if needed
         if not hasattr(self, 'risk_state'):
             self.risk_state = {
                 'consecutive_stops': 0,
@@ -50,33 +52,27 @@ class RideSession:
                 'is_overdue': False
             }
         
-        # 3. Update Derivative State
         self.risk_state['consecutive_stops'] = self.consecutive_stops
         self.risk_state['is_overdue'] = self.check_eta()
 
         import numpy as np
         curr_dist = np.sqrt((data.location.lat - self.end_loc.lat)**2 + (data.location.lon - self.end_loc.lon)**2)
         
-        # Trend Analysis (Moving Away?)
         last_dist = self.risk_state.get('last_dist', curr_dist)
         if curr_dist > last_dist:
              self.risk_state['bad_trend_count'] = self.risk_state.get('bad_trend_count', 0) + 1
         else:
-             # Reset on good behavior (moving closer)
              self.risk_state['bad_trend_count'] = 0
              
         self.risk_state['last_dist'] = curr_dist
         
-        # 4. Calculate Cumulative Risk (ONCE)
         result = self.risk_engine.calculate_risk(self.risk_state, data)
 
         self.current_risk = result['score']
         self.severity = result['severity']
 
-        # 5. Log Evidence
         database.log_telemetry(self.id, data, self.current_risk)
         if result['reasons']:
-            # Log specific reasons for audit trail
             database.log_risk_event(self.id, result['reasons'], self.current_risk)
 
         return {
